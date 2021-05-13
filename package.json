@@ -1,0 +1,59 @@
+{
+  "name": "@amndns/amqp-ts",
+  "version": "1.0.6",
+  "description": "A class-based wrapper module for the amqp-ts library.",
+  "author": "Adel Ismael Mandanas",
+  "license": "MIT",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "dependencies": {
+    "amqp-ts": "^1.8.0",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
+    "reflect-metadata": "^0.1.13",
+    "tslib": "^2.2.0",
+    "typedi": "^0.10.0"
+  },
+  "scripts": {
+    "build-ts": "tsc",
+    "test:unit": "jest --testPathPattern=unit --passWithNoTests",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/test/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./test/unit/lib/setup.ts"
+    ]
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "@types/node": "^14.14.37",
+    "@typescript-eslint/eslint-plugin": "^4.21.0",
+    "@typescript-eslint/parser": "^4.21.0",
+    "eslint": "^7.23.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.3.1",
+    "jest": "^26.6.3",
+    "prettier": "^2.2.1",
+    "source-map-support": "^0.5.19",
+    "ts-jest": "^26.5.5",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  }
+}
