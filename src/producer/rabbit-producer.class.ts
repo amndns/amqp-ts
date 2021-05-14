@@ -7,8 +7,6 @@ import { ExchangeType, MessageOptions, ProducerConfig } from '../types';
  * and then closed after the event resolves.
  */
 class RabbitProducer {
-  readonly CLOSE_CONNECTION_TIMEOUT = 250; // in milliseconds
-
   private config: ProducerConfig;
   private connection: Connection;
   private exchange: Exchange;
@@ -41,9 +39,6 @@ class RabbitProducer {
     this.connection.completeConfiguration().then(() => {
       const message = new Message(JSON.stringify(content), options);
       this.exchange.send(message, this.config.routingKey);
-      setTimeout(() => {
-        this.connection.close();
-      }, this.CLOSE_CONNECTION_TIMEOUT);
     });
   }
 }
