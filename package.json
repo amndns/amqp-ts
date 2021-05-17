@@ -1,6 +1,6 @@
 {
   "name": "@amndns/amqp-ts",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "A class-based wrapper module for the amqp-ts library.",
   "author": "Adel Ismael Mandanas",
   "license": "MIT",

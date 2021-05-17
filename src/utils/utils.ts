@@ -18,15 +18,15 @@ export async function consumerMessage<T>(
 
   const errors = await validate(transformedRequest as any);
   if (errors.length > 1) {
-    throw new Error(`Invalid request shape.`);
+    throw new Error(`Invalid consumer message request shape.`);
   }
 
   return transformedRequest as T;
 }
 
 /**
- * Converts a producer message into a request class instance object. This also
- * validates the request object.
+ * Converts a producer message into a request JS object. This also validates
+ * the request object.
  */
 export async function producerMessage<T>(
   cls: ClassConstructor<unknown>,
@@ -36,7 +36,7 @@ export async function producerMessage<T>(
 
   const errors = await validate(transformedRequest as any);
   if (errors.length > 1) {
-    throw new Error(`Invalid request shape.`);
+    throw new Error(`Invalid producer message request shape.`);
   }
 
   return classToPlain(transformedRequest) as T;
