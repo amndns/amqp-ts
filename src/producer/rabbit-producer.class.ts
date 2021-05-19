@@ -29,7 +29,11 @@ class RabbitProducer {
     this.exchange = this.connection.declareExchange(exchange, type, options);
   }
 
-  public async publish<T>(content: T, options: MessageOptions): Promise<void> {
+  public async publish<T>(
+    content: T,
+    routingKey: string,
+    options: MessageOptions
+  ): Promise<void> {
     if (!this.connection) {
       this.connect();
     }
@@ -38,7 +42,7 @@ class RabbitProducer {
 
     this.connection.completeConfiguration().then(() => {
       const message = new Message(JSON.stringify(content), options);
-      this.exchange.send(message, this.config.routingKey);
+      this.exchange.send(message, routingKey);
     });
   }
 }

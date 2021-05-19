@@ -36,7 +36,6 @@ export interface ConsumerConfig extends BaseConfig {
 
 export interface ProducerConfig extends BaseConfig {
   exchange: string;
-  routingKey: string;
   exchangeOptions?: ExchangeOptions;
 }
 
