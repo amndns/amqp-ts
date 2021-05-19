@@ -11,7 +11,9 @@ class RabbitConsumer {
   private config: ConsumerConfig;
   private connection: Connection;
   private exchange: Exchange;
+  private deadLetterExchange: Exchange;
   private queue: Queue;
+  private deadLetterQueue: Queue;
 
   constructor(config: ConsumerConfig, callback: ConsumerCallback) {
     this.config = config;
@@ -44,13 +46,24 @@ class RabbitConsumer {
   }
 
   public declareQueue(): void {
-    const { queue, queueOptions = {} } = this.config;
+    const {
+      deadLetterOptions: { deadLetterExchange, deadLetterRoutingKey },
+      queue,
+      queueOptions = {},
+    } = this.config;
     const {
       exclusive = false,
       durable = true,
       autoDelete = false,
       ...options
     } = queueOptions;
+
+    if (this.config.deadLetterOptions) {
+      options.deadLetterExchange = deadLetterExchange;
+      options.arguments = {
+        'x-dead-letter-routing-key': deadLetterRoutingKey,
+      };
+    }
 
     this.queue = this.connection.declareQueue(queue, {
       exclusive,
@@ -60,10 +73,69 @@ class RabbitConsumer {
     });
   }
 
+  public declareDeadLetterExchange(): void {
+    const {
+      deadLetterOptions: { deadLetterExchange },
+      exchangeOptions = {},
+    } = this.config;
+    const {
+      type = ExchangeType.TOPIC,
+      durable = true,
+      autoDelete = false,
+      noCreate = false,
+      ...options
+    } = exchangeOptions;
+
+    this.deadLetterExchange = this.connection.declareExchange(
+      deadLetterExchange,
+      type,
+      {
+        durable,
+        autoDelete,
+        noCreate,
+        ...options,
+      }
+    );
+  }
+
+  public declareDeadLetterQueue(): void {
+    const {
+      deadLetterOptions: { deadLetterExchange, deadLetterQueue, messageTtl },
+      routingKey,
+      queueOptions = {},
+    } = this.config;
+    const {
+      exclusive = false,
+      durable = true,
+      autoDelete = false,
+      ...options
+    } = queueOptions;
+
+    this.deadLetterQueue = this.connection.declareQueue(deadLetterQueue, {
+      exclusive,
+      durable,
+      autoDelete,
+      messageTtl,
+      deadLetterExchange,
+      arguments: {
+        'x-dead-letter-routing-key': routingKey,
+      },
+      ...options,
+    });
+  }
+
   public declareResources(): void {
     this.declareExchange();
     this.declareQueue();
     this.queue.bind(this.exchange, this.config.routingKey);
+    if (this.config.deadLetterOptions) {
+      this.declareDeadLetterExchange();
+      this.declareDeadLetterQueue();
+      this.deadLetterQueue.bind(
+        this.deadLetterExchange,
+        this.config.deadLetterOptions.deadLetterRoutingKey
+      );
+    }
   }
 
   public run(): void {

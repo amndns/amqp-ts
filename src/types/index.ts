@@ -25,6 +25,13 @@ export interface BaseConfig {
   vhost?: string;
 }
 
+export interface DeadLetterOptions {
+  deadLetterExchange: string;
+  deadLetterQueue: string;
+  deadLetterRoutingKey: string;
+  messageTtl: number;
+}
+
 export interface ConsumerConfig extends BaseConfig {
   exchange: string;
   queue: string;
@@ -32,6 +39,7 @@ export interface ConsumerConfig extends BaseConfig {
   consumerOptions?: Queue.ActivateConsumerOptions;
   exchangeOptions?: ExchangeOptions;
   queueOptions?: Queue.DeclarationOptions;
+  deadLetterOptions?: DeadLetterOptions;
 }
 
 export interface ProducerConfig extends BaseConfig {
