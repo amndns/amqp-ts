@@ -4,9 +4,15 @@
   <a href="https://badge.fury.io/js/%40amndns%2Famqp-ts">
     <img src="https://badge.fury.io/js/%40amndns%2Famqp-ts.svg" alt="npm version" height="18" target="_blank">
   </a>
-  <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
-  <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
-  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" />
+  <a href="https://github.com/amndns/amqp-ts/blob/master/README.md" target="_blank">
+    <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
+  </a>
+  <a href="https://github.com/amndns/amqp-ts/graphs/commit-activity" target="_blank">
+    <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
+  </a>
+  <a href="https://github.com/amndns/amqp-ts/blob/master/LICENSE" target="_blank">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" />
+  </a>
 </p>
 
 > `@amndns/amqp-ts` is a class-based wrapper module for the original yet legacy `amqp-ts` library.
@@ -19,6 +25,7 @@
   - `function declareExchange`
   - `function declareQueue`
   - `function declareResources`
+  - `function declareAdditionalResources`
   - `function run`
 
 **Producer**

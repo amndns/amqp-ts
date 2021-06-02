@@ -1,5 +1,13 @@
 import { Connection, Exchange, Queue } from 'amqp-ts';
-import { ExchangeType, ConsumerConfig, ConsumerCallback } from '../types';
+import {
+  AdditionalResourcesConfig,
+  ConsumerConfig,
+  ConsumerCallback,
+  ExchangeOptions,
+  ExchangeType,
+  Resources,
+  DeadLetterOptions,
+} from '../types';
 
 /**
  * The main Consumer object, primarily used for registering and activating the
@@ -10,10 +18,6 @@ class RabbitConsumer {
   private callback: ConsumerCallback;
   private config: ConsumerConfig;
   private connection: Connection;
-  private exchange: Exchange;
-  private deadLetterExchange: Exchange;
-  private queue: Queue;
-  private deadLetterQueue: Queue;
 
   constructor(config: ConsumerConfig, callback: ConsumerCallback) {
     this.config = config;
@@ -27,8 +31,10 @@ class RabbitConsumer {
     );
   }
 
-  public declareExchange(): void {
-    const { exchange, exchangeOptions = {} } = this.config;
+  public declareExchange(
+    exchange: string,
+    exchangeOptions: ExchangeOptions
+  ): Exchange {
     const {
       type = ExchangeType.TOPIC,
       durable = true,
@@ -37,7 +43,7 @@ class RabbitConsumer {
       ...options
     } = exchangeOptions;
 
-    this.exchange = this.connection.declareExchange(exchange, type, {
+    return this.connection.declareExchange(exchange, type, {
       durable,
       autoDelete,
       noCreate,
@@ -45,12 +51,11 @@ class RabbitConsumer {
     });
   }
 
-  public declareQueue(): void {
-    const {
-      deadLetterOptions: { deadLetterExchange, deadLetterRoutingKey },
-      queue,
-      queueOptions = {},
-    } = this.config;
+  public declareQueue(
+    queue: string,
+    queueOptions: Queue.DeclarationOptions,
+    deadLetterOptions?: DeadLetterOptions
+  ): Queue {
     const {
       exclusive = false,
       durable = true,
@@ -58,14 +63,16 @@ class RabbitConsumer {
       ...options
     } = queueOptions;
 
-    if (this.config.deadLetterOptions) {
+    if (deadLetterOptions) {
+      const { deadLetterExchange, deadLetterRoutingKey } = deadLetterOptions;
+
       options.deadLetterExchange = deadLetterExchange;
       options.arguments = {
         'x-dead-letter-routing-key': deadLetterRoutingKey,
       };
     }
 
-    this.queue = this.connection.declareQueue(queue, {
+    return this.connection.declareQueue(queue, {
       exclusive,
       durable,
       autoDelete,
@@ -73,69 +80,40 @@ class RabbitConsumer {
     });
   }
 
-  public declareDeadLetterExchange(): void {
+  public declareResources(
+    config: ConsumerConfig | AdditionalResourcesConfig
+  ): Resources {
     const {
-      deadLetterOptions: { deadLetterExchange },
+      exchange,
       exchangeOptions = {},
-    } = this.config;
-    const {
-      type = ExchangeType.TOPIC,
-      durable = true,
-      autoDelete = false,
-      noCreate = false,
-      ...options
-    } = exchangeOptions;
-
-    this.deadLetterExchange = this.connection.declareExchange(
-      deadLetterExchange,
-      type,
-      {
-        durable,
-        autoDelete,
-        noCreate,
-        ...options,
-      }
-    );
-  }
-
-  public declareDeadLetterQueue(): void {
-    const {
-      deadLetterOptions: { deadLetterExchange, deadLetterQueue, messageTtl },
-      routingKey,
+      queue,
       queueOptions = {},
-    } = this.config;
-    const {
-      exclusive = false,
-      durable = true,
-      autoDelete = false,
-      ...options
-    } = queueOptions;
+      routingKey,
+      deadLetterOptions,
+    } = config;
 
-    this.deadLetterQueue = this.connection.declareQueue(deadLetterQueue, {
-      exclusive,
-      durable,
-      autoDelete,
-      messageTtl,
-      deadLetterExchange,
-      arguments: {
-        'x-dead-letter-routing-key': routingKey,
-      },
-      ...options,
-    });
+    const exchangeResource = this.declareExchange(exchange, exchangeOptions);
+    const queueResource = this.declareQueue(
+      queue,
+      queueOptions,
+      deadLetterOptions
+    );
+    queueResource.bind(exchangeResource, routingKey);
+
+    return {
+      exchangeResource,
+      queueResource,
+    };
   }
 
-  public declareResources(): void {
-    this.declareExchange();
-    this.declareQueue();
-    this.queue.bind(this.exchange, this.config.routingKey);
-    if (this.config.deadLetterOptions) {
-      this.declareDeadLetterExchange();
-      this.declareDeadLetterQueue();
-      this.deadLetterQueue.bind(
-        this.deadLetterExchange,
-        this.config.deadLetterOptions.deadLetterRoutingKey
-      );
+  public declareAdditionalResources(
+    additionalResources: AdditionalResourcesConfig
+  ): void {
+    if (!this.connection) {
+      this.connect();
     }
+
+    this.declareResources(additionalResources);
   }
 
   public run(): void {
@@ -151,8 +129,8 @@ class RabbitConsumer {
       this.connect();
     }
 
-    this.declareResources();
-    this.queue.activateConsumer(this.callback, {
+    const { queueResource } = this.declareResources(this.config);
+    queueResource.activateConsumer(this.callback, {
       noLocal,
       noAck,
       exclusive,

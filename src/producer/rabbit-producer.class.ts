@@ -1,5 +1,10 @@
 import { Connection, Exchange, Message } from 'amqp-ts';
-import { ExchangeType, MessageOptions, ProducerConfig } from '../types';
+import {
+  ExchangeOptions,
+  ExchangeType,
+  MessageOptions,
+  ProducerConfig,
+} from '../types';
 
 /**
  * The main Producer object, primarily used for publishing messages to
@@ -9,7 +14,6 @@ import { ExchangeType, MessageOptions, ProducerConfig } from '../types';
 class RabbitProducer {
   private config: ProducerConfig;
   private connection: Connection;
-  private exchange: Exchange;
 
   constructor(config: ProducerConfig) {
     this.config = config;
@@ -22,11 +26,13 @@ class RabbitProducer {
     );
   }
 
-  public declareExchange(): void {
-    const { exchange, exchangeOptions = {} } = this.config;
+  public declareExchange(
+    exchange: string,
+    exchangeOptions: ExchangeOptions
+  ): Exchange {
     const { type = ExchangeType.TOPIC, ...options } = exchangeOptions;
 
-    this.exchange = this.connection.declareExchange(exchange, type, options);
+    return this.connection.declareExchange(exchange, type, options);
   }
 
   public async publish<T>(
@@ -38,11 +44,12 @@ class RabbitProducer {
       this.connect();
     }
 
-    this.declareExchange();
+    const { exchange, exchangeOptions = {} } = this.config;
+    const exchangeResource = this.declareExchange(exchange, exchangeOptions);
 
     this.connection.completeConfiguration().then(() => {
       const message = new Message(JSON.stringify(content), options);
-      this.exchange.send(message, routingKey);
+      exchangeResource.send(message, routingKey);
     });
   }
 }

@@ -27,9 +27,21 @@ export interface BaseConfig {
 
 export interface DeadLetterOptions {
   deadLetterExchange: string;
-  deadLetterQueue: string;
   deadLetterRoutingKey: string;
-  messageTtl: number;
+}
+
+export interface Resources {
+  exchangeResource: Exchange;
+  queueResource: Queue;
+}
+
+export interface AdditionalResourcesConfig {
+  exchange: string;
+  queue: string;
+  routingKey: string;
+  exchangeOptions?: ExchangeOptions;
+  queueOptions?: Queue.DeclarationOptions;
+  deadLetterOptions?: DeadLetterOptions;
 }
 
 export interface ConsumerConfig extends BaseConfig {
